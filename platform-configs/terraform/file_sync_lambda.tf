@@ -54,14 +54,35 @@ resource "aws_iam_role" "file_sync_lambda_execution_role" {
   })
 }
 
+# https://stackoverflow.com/questions/56916719/is-there-a-way-to-define-multiple-source-file-for-terraform-archive-provider
+locals {
+  source_files = ["./lambdas/file_sync.py", "./lambdas/shared_utils.py"]
+  file_sync_lambda_output_path = "./lambdas/temp/file_sync_archive.zip"
+}
+
+data "template_file" "t_file" {
+  count = "${length(local.source_files)}"
+  template = "${file(element(local.source_files, count.index))}"
+}
+
+resource "local_file" "to_temp_dir" {
+  count = "${length(local.source_files)}"
+  filename = "./lambdas/temp/${basename(element(local.source_files, count.index))}"
+  content = "${element(data.template_file.t_file.*.rendered, count.index)}"
+}
+
 data "archive_file" "file_sync_lambda" {
   type = "zip"
-  source_file = "./lambdas/file_sync.py"
-  output_path = "./lambdas/file_sync_archive.zip"
+  source_dir = "./lambdas/temp"
+  output_path = local.file_sync_lambda_output_path
+
+  depends_on = [
+    local_file.to_temp_dir
+  ]
 }
 
 resource "aws_lambda_function" "file_sync_lambda" {
-  filename = "./lambdas/file_sync_archive.zip"
+  filename = local.file_sync_lambda_output_path
   function_name = "special-message-alarm-file-sync-lambda"
   role = aws_iam_role.file_sync_lambda_execution_role.arn
   handler = "file_sync.lambda_handler"

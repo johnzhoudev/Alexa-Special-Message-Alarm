@@ -7,3 +7,5 @@ backups
 test.*
 platform-configs/**/shared_utils.py
 special_message_skill/**/shared_utils.py
+*temp
+*temp/*

@@ -1,6 +1,5 @@
 import boto3
 import os
-from datetime import datetime
 from shared_utils import get_current_date_time
 
 def lambda_handler(event, context):
