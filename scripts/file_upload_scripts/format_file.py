@@ -1,30 +1,29 @@
 ## Run from file_upload_scripts directory
 import os
-import shutil
-import hashlib
+
+from pydub import AudioSegment, effects
 
 ASSETS_PATH = "assets"
 FORMATTED_ASSETS_PATH = "formatted_assets"
-AMAZON_USER_ID_ENV_VAR = "AMAZON_USER_ID"
+HASH_USER_ID_ENV_VAR = "HASH_AMAZON_USER_ID"
 
+def format_files(hash_id=None):
 
-def format_files(amazon_user_id=None):
-
-  if amazon_user_id is None:
-    amazon_user_id = os.getenv(AMAZON_USER_ID_ENV_VAR)
+  if hash_id is None:
+    hash_id = os.getenv(HASH_USER_ID_ENV_VAR)
 
   files = os.listdir(ASSETS_PATH)
 
   for file_name in files:
     file_path = os.path.join(ASSETS_PATH, file_name)
 
-    # TODO: Process audio files
+    # Normalize audio volume
+    print("Processing", file_path)
+    raw_sound = AudioSegment.from_file(f"./{file_path}")
+    normalized_sound = effects.normalize(raw_sound)
 
-    new_file_name = f"{hash(amazon_user_id)}-{file_name}"
-    shutil.copy(file_path, os.path.join(FORMATTED_ASSETS_PATH, new_file_name))
-
-def hash(text):
-  return hashlib.sha1(text.encode('ascii')).hexdigest()
+    new_file_name = f"{hash_id}-{file_name}"
+    normalized_sound.export(os.path.join(FORMATTED_ASSETS_PATH, new_file_name))
 
 if __name__ == "__main__":
   format_files()
