@@ -77,6 +77,35 @@ class LaunchRequestHandler(AbstractRequestHandler):
     return (
       handler_input.response_builder
         .add_directive(play_directive)
+        .set_should_end_session(True)
+        .response
+    )
+
+class DoNothingRequestHandler(AbstractRequestHandler):
+  def __init__(self, request_type):
+     self.request_type = request_type
+
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return ask_utils.is_request_type(self.request_type)(handler_input)
+  
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+    print(f"Received {self.request_type} Event, skipping")
+    return handler_input.response_builder.response
+
+class PlaybackFailedRequestHandler(AbstractRequestHandler):
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return ask_utils.is_request_type("AudioPlayer.PlaybackFailed")(handler_input)
+  
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+    print(f"Received {self.request_type} Event")
+
+    return (
+      handler_input.response_builder
+        .speak("Error, playback failed. Please reach out to the developer of this skill for more support.")
         .response
     )
 
@@ -218,12 +247,20 @@ class CatchAllExceptionHandler(AbstractExceptionHandler):
 
 sb = CustomSkillBuilder(api_client=DefaultApiClient())
 
-sb.add_request_handler(LaunchRequestHandler())
+sb.add_request_handler(LaunchRequestHandler()) # Handles playing audio
 sb.add_request_handler(HelloWorldIntentHandler())
 sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
+
+# Handlers to skip audio 
+# https://developer.amazon.com/en-US/docs/alexa/custom-skills/audioplayer-interface-reference.html#directives
+for request_type in ["PlaybackStarted", "PlaybackFinished", "PlaybackStopped", "PlaybackNearlyFinished"]:
+  sb.add_request_handler(DoNothingRequestHandler(f"AudioPlayer.{request_type}"))
+
+sb.add_request_handler(PlaybackFailedRequestHandler())
+
 sb.add_request_handler(IntentReflectorHandler()) # make sure IntentReflectorHandler is last so it doesn't override your custom intent handlers
 
 sb.add_exception_handler(CatchAllExceptionHandler())
