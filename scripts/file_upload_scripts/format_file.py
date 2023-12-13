@@ -23,7 +23,10 @@ def format_files(hash_id=None):
     normalized_sound = effects.normalize(raw_sound)
 
     new_file_name = f"{hash_id}-{file_name}"
-    normalized_sound.export(os.path.join(FORMATTED_ASSETS_PATH, new_file_name))
+    asset_path = os.path.join(FORMATTED_ASSETS_PATH, hash_id)
+    if not os.path.exists(asset_path):
+      os.mkdir(asset_path)
+    normalized_sound.export(os.path.join(FORMATTED_ASSETS_PATH, hash_id, new_file_name))
 
 if __name__ == "__main__":
-  format_files()
+  format_files("")
