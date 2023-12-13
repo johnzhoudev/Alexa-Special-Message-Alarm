@@ -1,6 +1,5 @@
 import boto3
 import os
-import hashlib
 from datetime import datetime
 
 def lambda_handler(event, context):
@@ -9,11 +8,8 @@ def lambda_handler(event, context):
   user_id = file_name.split("-")[0]
   print("User Id:", user_id)
 
-  # region_name = os.environ['REGION_NAME']
-  # get all env variables
-  region_name = "us-east-1"
-  # table_name = os.environ['TABLE_NAME']
-  table_name = "special-message-alarm-audio-state"
+  region_name = os.environ['AWS_REGION_NAME']
+  table_name = os.environ['SPECIAL_MESSAGE_ALARM_TABLE_NAME']
 
   # check if exists in dynamo, else create new entry
   dynamodb_client = boto3.resource('dynamodb', region_name=region_name)

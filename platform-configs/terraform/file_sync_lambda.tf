@@ -69,6 +69,13 @@ resource "aws_lambda_function" "file_sync_lambda" {
   source_code_hash = data.archive_file.file_sync_lambda.output_base64sha256
 
   runtime = "python3.9"
+
+  environment {
+    variables = {
+      SPECIAL_MESSAGE_ALARM_TABLE_NAME = aws_dynamodb_table.special_message_alarm_dynamodb_table.id,
+      AWS_REGION_NAME = local.region
+    }
+  }
 }
 
 resource "aws_cloudwatch_event_rule" "on_s3_file_upload" {

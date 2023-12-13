@@ -17,8 +17,12 @@ terraform {
   }
 }
 
-provider "aws" {
+locals {
   region = "us-east-1"
+}
+
+provider "aws" {
+  region = local.region
 }
 
 resource "aws_s3_bucket" "special_message_alarm_s3_bucket" {
