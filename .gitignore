@@ -1,8 +1,8 @@
 *tfstate*
 .terraform
 *.zip
-file_upload_scripts/assets
-file_upload_scripts/formatted_assets
+scripts/file_upload_scripts/assets
+scripts/file_upload_scripts/formatted_assets
 backups
 test.*
 platform-configs/**/shared_utils.py

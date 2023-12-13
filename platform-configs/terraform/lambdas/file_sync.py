@@ -1,6 +1,6 @@
 import boto3
 import os
-from shared_utils import get_current_date_time
+from shared_utils import *
 
 def lambda_handler(event, context):
   print("Received event: ", event)
@@ -15,17 +15,10 @@ def lambda_handler(event, context):
   dynamodb_client = boto3.resource('dynamodb', region_name=region_name)
   table = dynamodb_client.Table(table_name)
 
-  current_entry = table.get_item(Key={ "userid": user_id })
+  current_entry = table.get_item(Key={ "user_id": user_id })
 
   if "Item" not in current_entry:
-    current_entry = {
-      "userid": user_id,
-      "unplayed": [],
-      "played": [],
-      "unplayed_play_immediately": [],
-      "created_at": get_current_date_time(),
-      "last_updated_at": get_current_date_time()
-    }
+    current_entry = get_new_user_metadata(user_id)
   else:
     current_entry = current_entry["Item"]
 

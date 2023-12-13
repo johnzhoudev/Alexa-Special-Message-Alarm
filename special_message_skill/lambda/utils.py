@@ -2,7 +2,7 @@ import logging
 import os
 import boto3
 from botocore.exceptions import ClientError
-import hashlib
+from shared_utils import *
 
 def create_presigned_url(object_name):
     """Generate a presigned URL to share an S3 object with a capped expiration of 60 seconds
@@ -26,28 +26,13 @@ def create_presigned_url(object_name):
     # The response contains the presigned URL
     return response
 
-
-## IMPORTANT! This must be the same hash function as in scripts/file_upload_scripts/format_file.py
-def hash(text):
-  return hashlib.sha1(text.encode('ascii')).hexdigest()
-
-def create_new_user(user_id, dynamo_table):
-  entry = {
-    "userid": user_id,
-    "unplayed": [],
-    "played": [],
-    "unplayed_play_immediately": [],
-    "created_at": get_current_date_time(),
-    "last_updated_at": get_current_date_time()
-  }
-  # dynamo_table.
-
-
 def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_id):
+  # Assume creds
   sts_client = boto3.client('sts')
   assumed_role_object = sts_client.assume_role(RoleArn=role_arn, RoleSessionName="SpecialMessageAlarmAssumeRoleSession")
   credentials = assumed_role_object['Credentials']
 
+  # Load dynamo and get user data
   dynamodb = boto3.resource('dynamodb', 
                             aws_accesskey_id=credentials['AccessKeyId'],
                             aws_secret_access_key=credentials['SecretAccessKey'],
@@ -56,12 +41,17 @@ def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_i
   
   table = dynamodb.Table(dynamo_table_name)
   user_id = hash(amazon_user_id)
-  current_entry = table.get_item(Key={ "userid": hash(user_id) })
+  current_entry = table.get_item(Key={ "user_id": hash(user_id) })
 
   # No entry yet for this user_id, so create new
   if "Item" not in current_entry:
-    pass
-    print("hi")
+    current_entry = get_new_user_metadata(user_id)
+  
+  # now try and get songs
+  if current_entry['']
+  
+
+
 
 
 

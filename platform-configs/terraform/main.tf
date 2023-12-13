@@ -43,10 +43,10 @@ resource "aws_dynamodb_table" "special_message_alarm_dynamodb_table" {
   read_capacity  = 1
   write_capacity = 1
   billing_mode = "PROVISIONED"
-  hash_key = "userid"
+  hash_key = "user_id"
 
   attribute {
-    name = "userid"
+    name = "user_id"
     type = "S"
   }
 
