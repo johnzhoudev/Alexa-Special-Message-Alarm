@@ -5,8 +5,8 @@ from datetime import datetime
 
 def lambda_handler(event, context):
   print("Received event: ", event)
-  filename = event['detail']['object']['key']
-  user_id = filename.split("-")[0]
+  file_name = event['detail']['object']['key']
+  user_id = file_name.split("-")[0]
   print("User Id:", user_id)
 
   # region_name = os.environ['REGION_NAME']
@@ -33,7 +33,15 @@ def lambda_handler(event, context):
   else:
     current_entry = current_entry["Item"]
 
-  current_entry['unplayed'].append(filename)
+  # if song already exists, skip
+  if (any(metadata['file_name'] == file_name for metadata in current_entry['unplayed'])):
+    print("File already exists")
+    return {
+      "event": event,
+      "status": "File already exists"
+    }
+
+  current_entry['unplayed'].append(build_file_metadata(file_name))
   current_entry['last_updated_at'] = get_current_date_time()
   res = table.put_item(Item=current_entry)
   print("Put Item response:", res)
@@ -44,6 +52,13 @@ def lambda_handler(event, context):
   }
 
 # Helpers
+
+def build_file_metadata(file_name, max_plays=None):
+  return {
+    "num_plays": 0,
+    "max_plays": max_plays,
+    "file_name": file_name
+  }
 
 def get_current_date_time():
   return datetime.now().strftime("%Y-%m-%d %H:%M:%S") 

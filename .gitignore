@@ -1,7 +1,7 @@
 *tfstate*
 .terraform
 *.zip
-test.txt
 file_upload_scripts/assets
 file_upload_scripts/formatted_assets
 backups
+test.*
