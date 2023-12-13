@@ -1,6 +1,7 @@
 import boto3
 import os
 from datetime import datetime
+from shared_utils import get_current_date_time
 
 def lambda_handler(event, context):
   print("Received event: ", event)
@@ -55,6 +56,3 @@ def build_file_metadata(file_name, max_plays=None):
     "max_plays": max_plays,
     "file_name": file_name
   }
-
-def get_current_date_time():
-  return datetime.now().strftime("%Y-%m-%d %H:%M:%S") 

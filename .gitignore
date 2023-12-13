@@ -5,3 +5,5 @@ file_upload_scripts/assets
 file_upload_scripts/formatted_assets
 backups
 test.*
+platform-configs/**/shared_utils.py
+special_message_skill/**/shared_utils.py
