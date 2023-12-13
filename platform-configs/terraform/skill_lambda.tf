@@ -7,7 +7,7 @@ data "aws_iam_policy_document" "special_message_alarm_lambda_execution_policy" {
     ]
 
     resources = [
-      aws_s3_bucket.special_message_alarm_s3_bucket.arn
+      "${aws_s3_bucket.special_message_alarm_s3_bucket.arn}/*"
     ]
   }
 

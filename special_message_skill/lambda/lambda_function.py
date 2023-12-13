@@ -23,8 +23,16 @@ from ask_sdk_core.handler_input import HandlerInput
 
 from ask_sdk_model import Response
 
+from utils import get_audio, get_amazon_user_id, NO_FILES_UPLOADED
+
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.INFO)
+
+# Consts, should move to param store?
+ROLE_ARN = "arn:aws:iam::170221608339:role/special_message_alarm_lambda_execution_role"
+REGION_NAME = "us-east-1"
+S3_BUCKET = "special-message-alarm-audio-bucket"
+DYNAMO_TABLE_NAME = "special-message-alarm-audio-state"
 
 class LaunchRequestHandler(AbstractRequestHandler):
     """Handler for Skill Launch."""
@@ -36,9 +44,22 @@ class LaunchRequestHandler(AbstractRequestHandler):
     def handle(self, handler_input):
         # type: (HandlerInput) -> Response
         speak_output = "Welcome to the special message alarm skill! Say help for more info."
+        error_output = "Unexpected error encountered. Fuuuk."
+        upload_items_output = "Error, you currently have no audio files uploaded. Please upload them on S3 thru the AWS developer console"
+        print("user id", get_amazon_user_id(handler_input))
 
-        audio_url = "https://johnzhoudev-test-bucket-1.s3.us-east-2.amazonaws.com/clip.mp3?response-content-disposition=inline&X-Amz-Security-Token=IQoJb3JpZ2luX2VjEJ3%2F%2F%2F%2F%2F%2F%2F%2F%2F%2FwEaCXVzLWVhc3QtMiJHMEUCIDwaI%2BNYDVp4DNBseq%2FFotDP%2FPpJQ0InlultFL9zLGQrAiEApRbf7rkMVM08brT3HN%2Bn%2B5UOZy%2F7sNzFkFCfQowY%2Fjkq5AIIFhAAGgwxNzAyMjE2MDgzMzkiDBKZnrOu7Rj6TiyKYSrBAjHJdwIVU7HmfnDh8hjdvM3FJmfw5O4sXJJcMrwQrUdG2IDuuQxmuY8kJ6jo%2FfMDfiESzmtOENuik2QiiE4%2FpNGDJGoSpUk%2BUp0446TOZYMzEMdOGFdSCE%2BqqhFxvAvqkmMCRh1KI7Wkn56YTdHor%2BK5z6Co%2Fk2bzXYaxLJGSOxasTGtbqaXAU9O5sVnsn%2BNXIvPwhGUNeCS0QUxlK50gjstmgC37oBJm9f8H735Rhzv9rtHPU%2FFxTvG6re97ySAnxWaweRT62LEVXQFx22vwFbIOQrWdrTp89QxzksZTK2GxhcfMbPBwf9gA3pHc%2F2SqvOW9gxh7YPRtc93rxcoi6IOjcR0huzKFXLKRBKhrdVHigl%2Fb8h0mFpVA9V3KJbFwWBpSkpD3I7xYxjaUvISLqEl6Sjo4FTVvPPlKgRpFTxGAzD2l9yrBjqzAr7hcIbxE5vsprSUxX73%2F1z1TQgLmFpvCbxqMwH8s60C7AUx%2F6OwYs5LDuKyje8lXXgP6VVlij3TtbaHmdJOeD4ZaKXMGfXm6cJnqqwMA%2BRG6dFe3YJ94QaQtZQMnFNXlyUKQDDLpFcac5Gb%2BDaotGcSIdaF9Ntw3QrMPE3KSlr1v5sQDLcM%2FE8dxOe38XASOqOMmnZjUbK0WrbnW88G1wHJEXrkdU1vBRhAvZSw43tfssue%2BKkL%2B5Pdp%2BEPoqgyNd6367%2BMbrcxiAtqwSr1wh2glf9fss%2BN0gNACuhMphdvHHZTUM5IF6NiFfeOgFxq28ltUwRKKMnqrw1bWGNX0elZwaiQNpNf6ZbwnX2shAiIhwfN0nAdbCk6h7awpgK%2FKqAahVOrbyc34dfkJQux75WwrzQ%3D&X-Amz-Algorithm=AWS4-HMAC-SHA256&X-Amz-Date=20231211T140017Z&X-Amz-SignedHeaders=host&X-Amz-Expires=900&X-Amz-Credential=ASIASPIP7TWJ46V7PNGR%2F20231211%2Fus-east-2%2Fs3%2Faws4_request&X-Amz-Signature=1ec7c4e4b8e0f35513a248ea3c0ccc3d94bf36e243ec701c8b95aec6c7652d58"
-        audio_token = "johnzhoudev-test-bucket-1.s3.us-east-2.amasonaws.com/clip.mp3"
+        # def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_id):
+        audio_url, audio_token = get_audio(ROLE_ARN, REGION_NAME, S3_BUCKET, DYNAMO_TABLE_NAME, get_amazon_user_id(handler_input))
+        print(audio_url)
+
+        if (audio_url is None):
+            return (handler_input.response_builder
+                .speak(error_output)
+                .response)
+        elif (audio_url == NO_FILES_UPLOADED):
+            return (handler_input.response_builder
+                .speak(upload_items_output)
+                .response)
 
         audio_item = AudioItem(
             stream=Stream(
@@ -56,8 +77,6 @@ class LaunchRequestHandler(AbstractRequestHandler):
         return (
             handler_input.response_builder
                 .add_directive(play_directive)
-                # .speak(speak_output)
-                # .ask(speak_output)
                 .response
         )
 

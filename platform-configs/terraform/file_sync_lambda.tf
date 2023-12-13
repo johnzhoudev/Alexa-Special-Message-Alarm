@@ -1,16 +1,6 @@
 data "aws_iam_policy_document" "file_sync_lambda_execution_policy" {
   statement {
     actions = [
-      "s3:GetObject"
-    ]
-
-    resources = [
-      aws_s3_bucket.special_message_alarm_s3_bucket.arn
-    ]
-  }
-
-  statement {
-    actions = [
       "dynamodb:GetItem",
       "dynamodb:PutItem"
     ]
