@@ -35,50 +35,50 @@ S3_BUCKET = "special-message-alarm-audio-bucket"
 DYNAMO_TABLE_NAME = "special-message-alarm-audio-state"
 
 class LaunchRequestHandler(AbstractRequestHandler):
-    """Handler for Skill Launch."""
-    def can_handle(self, handler_input):
-        # type: (HandlerInput) -> bool
+  """Handler for Skill Launch."""
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
 
-        return ask_utils.is_request_type("LaunchRequest")(handler_input)
+    return ask_utils.is_request_type("LaunchRequest")(handler_input)
 
-    def handle(self, handler_input):
-        # type: (HandlerInput) -> Response
-        speak_output = "Welcome to the special message alarm skill! Say help for more info."
-        error_output = "Unexpected error encountered. Fuuuk."
-        upload_items_output = "Error, you currently have no audio files uploaded. Please upload them on S3 thru the AWS developer console"
-        print("user id", get_amazon_user_id(handler_input))
+  def handle(self, handler_input):
+    # type: (HandlerInput) -> Response
+    speak_output = "Welcome to the special message alarm skill! Say help for more info."
+    error_output = "Unexpected error encountered. Fuuuk."
+    upload_items_output = "Error, you currently have no audio files uploaded. Please upload them on S3 thru the AWS developer console"
+    print("user id", get_amazon_user_id(handler_input))
 
-        # def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_id):
-        audio_url, audio_token = get_audio(ROLE_ARN, REGION_NAME, S3_BUCKET, DYNAMO_TABLE_NAME, get_amazon_user_id(handler_input))
-        print(audio_url)
+    # def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_id):
+    audio_url, audio_token = get_audio(ROLE_ARN, REGION_NAME, S3_BUCKET, DYNAMO_TABLE_NAME, get_amazon_user_id(handler_input))
+    print(audio_url)
 
-        if (audio_url is None):
-            return (handler_input.response_builder
-                .speak(error_output)
-                .response)
-        elif (audio_url == NO_FILES_UPLOADED):
-            return (handler_input.response_builder
-                .speak(upload_items_output)
-                .response)
+    if (audio_url is None):
+      return (handler_input.response_builder
+        .speak(error_output)
+        .response)
+    elif (audio_url == NO_FILES_UPLOADED):
+      return (handler_input.response_builder
+        .speak(upload_items_output)
+        .response)
 
-        audio_item = AudioItem(
-            stream=Stream(
-                url=audio_url,
-                token=audio_token,
-                offset_in_milliseconds=0
-            )
-        )
+    audio_item = AudioItem(
+      stream=Stream(
+        url=audio_url,
+        token=audio_token,
+        offset_in_milliseconds=0
+      )
+    )
 
-        play_directive = PlayDirective(
-            play_behavior=PlayBehavior.REPLACE_ALL,
-            audio_item=audio_item
-        )
+    play_directive = PlayDirective(
+      play_behavior=PlayBehavior.REPLACE_ALL,
+      audio_item=audio_item
+    )
 
-        return (
-            handler_input.response_builder
-                .add_directive(play_directive)
-                .response
-        )
+    return (
+      handler_input.response_builder
+        .add_directive(play_directive)
+        .response
+    )
 
 class HelloWorldIntentHandler(AbstractRequestHandler):
     """Handler for Hello World Intent."""

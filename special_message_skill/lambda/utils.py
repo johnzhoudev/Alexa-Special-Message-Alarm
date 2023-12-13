@@ -83,7 +83,7 @@ def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_i
   
 def put_current_entry(current_entry, table):
   current_entry['last_updated_at'] = get_current_date_time()
-  put_current_entry(current_entry, table)
+  table.put_item(Item=current_entry)
 
 def played_entry_update_state(audio_entry, current_entry, dynamo_table, s3_client, s3_bucket):
   audio_entry['num_plays'] += 1
