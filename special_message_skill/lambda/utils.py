@@ -57,7 +57,7 @@ def get_audio(role_arn, region_name, s3_bucket, dynamo_table_name, amazon_user_i
     return NO_FILES_UPLOADED, None
 
   print("Chosen", audio_entry)
-  played_entry_update_state(audio_entry, current_entry, table, s3_client, s3_bucket)
+  played_entry_update_state(audio_entry, current_entry, s3_client, s3_bucket)
 
   # if now no more possible played songs, transfer played to unplayed
   print(current_entry)
@@ -85,27 +85,34 @@ def put_current_entry(current_entry, table):
   current_entry['last_updated_at'] = get_current_date_time()
   table.put_item(Item=current_entry)
 
-def played_entry_update_state(audio_entry, current_entry, dynamo_table, s3_client, s3_bucket):
+def played_entry_update_state(audio_entry, current_entry, s3_client, s3_bucket):
   audio_entry['num_plays'] += 1
 
   # if reached max plays, delete from everywhere
   if (audio_entry['max_plays'] and audio_entry['num_plays'] >= audio_entry['max_plays']):
     print("Max plays reached for entry", audio_entry)
-    delete_from_aws(audio_entry, dynamo_table, s3_client, s3_bucket)
+    delete_audio_entry_from_unplayed(audio_entry, current_entry)
+    # Keep s3 audio, but tag it as can be deleted
+    tag_s3_audio_as_unused(audio_entry['file_name'], s3_client, s3_bucket)
     return
 
   move_audio_entry_to_played(audio_entry, current_entry)
 
-def delete_from_aws(audio_entry, current_entry, dynamo_table, s3_client, s3_bucket):
+def tag_s3_audio_as_unused(file_name, s3_client, s3_bucket):
   try:
-    delete_audio_entry_from_unplayed(audio_entry, current_entry)
-    put_current_entry(current_entry, dynamo_table)
-    s3_client.delete_object(Bucket=s3_bucket, Key=audio_entry['file_name'])
+    s3_client.put_object_tagging(Bucket=s3_bucket, Key=file_name, Tagging={
+      "TagSet": [
+        {
+          "Key": "shouldDelete",
+          "Value": "true"
+        }
+      ]
+    })
   except Exception as e:
-    print("Error deleting audio_entry", e)
-    print("audio_entry", audio_entry)
-  else:
-    print("Successfully deleted audio entry", audio_entry)
+    print("Failed to tag for deletion", file_name)
+    print(e)
+    raise RuntimeError("Failed to tag for deletion", file_name)
+  print("Successfully tagged for deletion", file_name)
 
 def delete_audio_entry_from_unplayed(audio_entry, current_entry):
   current_entry['unplayed'] = [entry for entry in current_entry['unplayed'] if entry['file_name'] != audio_entry['file_name']]

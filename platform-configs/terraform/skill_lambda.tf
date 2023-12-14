@@ -3,7 +3,8 @@ data "aws_iam_policy_document" "special_message_alarm_lambda_execution_policy" {
     effect = "Allow"
     actions = [
       "s3:GetObject",
-      "s3:PutObject"
+      "s3:PutObject",
+      "s3:PutObjectTagging"
     ]
 
     resources = [
