@@ -10,8 +10,8 @@ import ask_sdk_core.utils as ask_utils
 from ask_sdk_core.api_client import DefaultApiClient
 
 from ask_sdk_model.services.directive import send_directive_request
-from ask_sdk_model.interfaces.tasks.complete_task_directive import CompleteTaskDirective
 from ask_sdk_model.interfaces.audioplayer.play_directive import PlayDirective
+from ask_sdk_model.interfaces.audioplayer.stop_directive import StopDirective
 from ask_sdk_model.interfaces.audioplayer.audio_item import AudioItem
 from ask_sdk_model.interfaces.audioplayer.stream import Stream
 from ask_sdk_model.interfaces.audioplayer.play_behavior import PlayBehavior
@@ -107,6 +107,31 @@ class PlaybackFailedRequestHandler(AbstractRequestHandler):
       handler_input.response_builder
         .speak("Error, playback failed. Please reach out to the developer of this skill for more support.")
         .response
+    )
+
+class PauseIntentHandler(AbstractRequestHandler):
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return ask_utils.is_intent_name("AMAZON.PauseIntent")(handler_input)
+  
+  def handle(self, handler_input):
+    print("Received pause intent")
+    return (
+       handler_input.response_builder
+       .add_directive(StopDirective())
+       .response
+    )
+
+class ResumeIntentHandler(AbstractRequestHandler):
+  def can_handle(self, handler_input):
+    # type: (HandlerInput) -> bool
+    return ask_utils.is_intent_name("AMAZON.ResumeIntent")(handler_input)
+  
+  def handle(self, handler_input):
+    print("Received resume intent")
+    # Do nothing
+    return (
+       handler_input.response_builder.response
     )
 
 class HelloWorldIntentHandler(AbstractRequestHandler):
@@ -253,6 +278,8 @@ sb.add_request_handler(HelpIntentHandler())
 sb.add_request_handler(CancelOrStopIntentHandler())
 sb.add_request_handler(FallbackIntentHandler())
 sb.add_request_handler(SessionEndedRequestHandler())
+sb.add_request_handler(PauseIntentHandler())
+sb.add_request_handler(ResumeIntentHandler())
 
 # Handlers to skip audio 
 # https://developer.amazon.com/en-US/docs/alexa/custom-skills/audioplayer-interface-reference.html#directives

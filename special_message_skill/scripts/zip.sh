@@ -1,4 +1,4 @@
 #!/bin/bash
-zip -r ../aws_skill_test.zip ./* 
+zip -r ../build_special_message_alarm.zip ./* 
 
 # Run from aws_skill directory!
