@@ -4,6 +4,11 @@ from shared_utils import *
 
 def lambda_handler(event, context):
   print("Received event: ", event)
+
+  for record in event["Records"]:
+    if (record["body"][""])
+
+
   file_name = event['detail']['object']['key']
   user_id = file_name.split("-")[0]
   print("User Id:", user_id)

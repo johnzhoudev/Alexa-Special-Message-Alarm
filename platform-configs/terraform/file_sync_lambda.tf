@@ -32,6 +32,18 @@ data "aws_iam_policy_document" "file_sync_lambda_execution_policy" {
 
   statement {
     actions = [
+      "sqs:ReceiveMessage",
+      "sqs:DeleteMessage",
+      "sqs:GetQueueAttributes"
+    ]
+
+    resources = [
+      aws_sqs_queue.s3_object_created_event_queue.arn
+    ]
+  }
+
+  statement {
+    actions = [
       "logs:CreateLogGroup",
       "logs:CreateLogStream",
       "logs:PutLogEvents"
@@ -113,33 +125,38 @@ resource "aws_lambda_function" "file_sync_lambda" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "on_s3_file_upload" {
-  name = "special_message_alarm_file_upload_event_rule"
-  description = "Triggers special message alarm file sync lambda handler"
-
-  event_pattern = jsonencode({
-    source = ["aws.s3"]
-    detail-type = [
-        "Object Created"
-    ]
-    detail = {
-      bucket = {
-        name = [aws_s3_bucket.special_message_alarm_s3_bucket.id]
-      }
-    }
-  })
-}
-
-resource "aws_cloudwatch_event_target" "send_to_file_sync_lambda" {
-  target_id = "file_sync_lambda"
-  rule = aws_cloudwatch_event_rule.on_s3_file_upload.name
-  arn = aws_lambda_function.file_sync_lambda.arn
-}
-
-resource "aws_lambda_permission" "allow_cloudwatch" {
-  statement_id = "AllowExecutionFromCloudWatch"
-  action = "lambda:InvokeFunction"
+resource "aws_lambda_event_source_mapping" "sqs_file_upload_source_mapping" {
+  event_source_arn = aws_sqs_queue.s3_object_created_event_queue.arn
   function_name = aws_lambda_function.file_sync_lambda.function_name
-  principal = "events.amazonaws.com"
-  source_arn = aws_cloudwatch_event_rule.on_s3_file_upload.arn
 }
+
+# resource "aws_cloudwatch_event_rule" "on_s3_file_upload" {
+#   name = "special_message_alarm_file_upload_event_rule"
+#   description = "Triggers special message alarm file sync lambda handler"
+
+#   event_pattern = jsonencode({
+#     source = ["aws.s3"]
+#     detail-type = [
+#         "Object Created"
+#     ]
+#     detail = {
+#       bucket = {
+#         name = [aws_s3_bucket.special_message_alarm_s3_bucket.id]
+#       }
+#     }
+#   })
+# }
+
+# resource "aws_cloudwatch_event_target" "send_to_file_sync_lambda" {
+#   target_id = "file_sync_lambda"
+#   rule = aws_cloudwatch_event_rule.on_s3_file_upload.name
+#   arn = aws_lambda_function.file_sync_lambda.arn
+# }
+
+# resource "aws_lambda_permission" "allow_cloudwatch" {
+#   statement_id = "AllowExecutionFromCloudWatch"
+#   action = "lambda:InvokeFunction"
+#   function_name = aws_lambda_function.file_sync_lambda.function_name
+#   principal = "events.amazonaws.com"
+#   source_arn = aws_cloudwatch_event_rule.on_s3_file_upload.arn
+# }
