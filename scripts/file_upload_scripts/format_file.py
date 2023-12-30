@@ -2,6 +2,9 @@
 import os
 
 from pydub import AudioSegment, effects
+from dotenv import load_dotenv
+
+load_dotenv()
 
 ASSETS_PATH_BASE = "assets"
 FORMATTED_ASSETS_PATH = "formatted_assets"

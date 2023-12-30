@@ -7,3 +7,7 @@
 
 ### To upload on s3
 1. Upload the formatted file to s3, and attach metadata `max-plays` to indicate max plays and `play-immediately` if you want it to be played next.
+
+### Dev notes
+- Run `pip install -r requirements.txt` to install reqs 
+- Update `requirements.txt` by running `pipreqs .`
