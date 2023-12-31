@@ -2,6 +2,8 @@ data "aws_iam_policy_document" "file_sync_lambda_execution_policy" {
   statement {
     actions = [
       "s3:GetObject",
+      "s3:DeleteObject",
+      "s3:GetObjectTagging"
     ]
 
     resources = [
@@ -22,7 +24,8 @@ data "aws_iam_policy_document" "file_sync_lambda_execution_policy" {
   statement {
     actions = [
       "dynamodb:GetItem",
-      "dynamodb:PutItem"
+      "dynamodb:PutItem",
+      "dynamodb:Scan"
     ]
 
     resources = [
@@ -100,7 +103,7 @@ resource "aws_lambda_function" "file_sync_lambda" {
   source_code_hash = data.archive_file.file_sync_lambda.output_base64sha256
 
   runtime = "python3.9"
-  timeout = 10
+  timeout = 300
 
   environment {
     variables = {
@@ -113,26 +116,17 @@ resource "aws_lambda_function" "file_sync_lambda" {
   }
 }
 
-resource "aws_cloudwatch_event_rule" "on_s3_file_upload" {
-  name = "special_message_alarm_file_upload_event_rule"
-  description = "Triggers special message alarm file sync lambda handler"
+// Cron Job Sync Rule
+resource "aws_cloudwatch_event_rule" "sync_audio_files" {
+  name = "special_message_alarm_sync_audio_files_event_rule"
+  description = "Syncs audio files in S3 bucket with Dynamo"
 
-  event_pattern = jsonencode({
-    source = ["aws.s3"]
-    detail-type = [
-        "Object Created"
-    ]
-    detail = {
-      bucket = {
-        name = [aws_s3_bucket.special_message_alarm_s3_bucket.id]
-      }
-    }
-  })
+  schedule_expression = "cron(0 8 ? * MON *)"
 }
 
-resource "aws_cloudwatch_event_target" "send_to_file_sync_lambda" {
+resource "aws_cloudwatch_event_target" "send_to_sync_audio_files_lambda" {
   target_id = "file_sync_lambda"
-  rule = aws_cloudwatch_event_rule.on_s3_file_upload.name
+  rule = aws_cloudwatch_event_rule.sync_audio_files.name
   arn = aws_lambda_function.file_sync_lambda.arn
 }
 
@@ -141,5 +135,5 @@ resource "aws_lambda_permission" "allow_cloudwatch" {
   action = "lambda:InvokeFunction"
   function_name = aws_lambda_function.file_sync_lambda.function_name
   principal = "events.amazonaws.com"
-  source_arn = aws_cloudwatch_event_rule.on_s3_file_upload.arn
+  source_arn = aws_cloudwatch_event_rule.sync_audio_files.arn
 }
