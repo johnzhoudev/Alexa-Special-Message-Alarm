@@ -79,6 +79,8 @@ def sync_files_for_user_hash(user_id, dynamo_table):
     elif file_name not in tracked_items:
       print("Adding " + file_name)
       add_audio(file_name, current_entry)
+    else:
+      print("Already added", file_name, "skipping")
         
   current_entry['last_updated_at'] = get_current_date_time()
   res = dynamo_table.put_item(Item=current_entry)
