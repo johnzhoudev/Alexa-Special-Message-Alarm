@@ -70,6 +70,11 @@ def sync_files_for_user_hash(user_id, dynamo_table):
   
   for item in response['Contents']:
     file_name = item['Key']
+
+    if file_name.endswith("/"):
+      print("Skipping folder " + file_name)
+      continue
+
     print("Processing " + file_name)
 
     if get_s3_should_delete(file_name):
