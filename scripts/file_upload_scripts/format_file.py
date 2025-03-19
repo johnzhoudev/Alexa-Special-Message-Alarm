@@ -20,6 +20,8 @@ def format_files(hash_id=None):
   files = os.listdir(assets_path)
 
   for file_name in files:
+    if (".DS_Store" in file_name): continue
+
     file_path = os.path.join(assets_path, file_name)
 
     print("Processing", file_path)
