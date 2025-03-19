@@ -44,7 +44,10 @@ def format_files(hash_id=None):
     asset_path = os.path.join(FORMATTED_ASSETS_PATH, hash_id)
     if not os.path.exists(asset_path):
       os.mkdir(asset_path)
-    normalized_sound.export(os.path.join(FORMATTED_ASSETS_PATH, hash_id, file_name))
+    
+    new_file_name = file_name.split(".")
+    new_file_name = ''.join(new_file_name[:-1]) + ".mp3"
+    normalized_sound.export(os.path.join(FORMATTED_ASSETS_PATH, hash_id, new_file_name))
 
 if __name__ == "__main__":
   format_files()
