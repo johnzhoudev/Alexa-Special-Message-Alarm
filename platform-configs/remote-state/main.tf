@@ -5,8 +5,8 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_s3_bucket" "terraform_state" {
-  bucket = "special-message-alarm-tfstate"
+resource "aws_s3_bucket" "terraform_state_2" {
+  bucket = "terraform-state-117290"
 
   lifecycle {
     prevent_destroy = true
@@ -14,21 +14,9 @@ resource "aws_s3_bucket" "terraform_state" {
 }
 
 resource "aws_s3_bucket_versioning" "terraform_state" {
-  bucket = aws_s3_bucket.terraform_state.id
+  bucket = aws_s3_bucket.terraform_state_2.id
 
   versioning_configuration {
     status = "Enabled"
-  }
-}
-
-resource "aws_dynamodb_table" "terraform_state_lock" {
-  name           = "special-message-alarm-state"
-  read_capacity  = 1
-  write_capacity = 1
-  hash_key       = "LockID"
-
-  attribute {
-    name = "LockID"
-    type = "S"
   }
 }

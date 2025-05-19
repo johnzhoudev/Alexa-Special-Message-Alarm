@@ -9,11 +9,11 @@ terraform {
   required_version = ">= 1.2.0"
 
   backend "s3" {
-    bucket         = "special-message-alarm-tfstate"
-    key            = "special-message-alarm/tfstate"
-    region         = "us-east-1"
-    encrypt        = true
-    dynamodb_table = "special-message-alarm-state"
+    bucket       = "terraform-state-117290"
+    key          = "special-message-alarm/tfstate"
+    region       = "us-east-1"
+    encrypt      = true
+    use_lockfile = true
   }
 }
 
@@ -26,15 +26,15 @@ provider "aws" {
 }
 
 resource "aws_s3_bucket" "special_message_alarm_s3_bucket" {
-    bucket = "special-message-alarm-audio-bucket"
+  bucket = "special-message-alarm-audio-bucket"
 
-    tags = {
-        Name = "Special Message Alarm Audio Bucket"
-    }
+  tags = {
+    Name = "Special Message Alarm Audio Bucket"
+  }
 }
 
 resource "aws_s3_bucket_notification" "s3_bucket_notification" {
-  bucket = aws_s3_bucket.special_message_alarm_s3_bucket.id
+  bucket      = aws_s3_bucket.special_message_alarm_s3_bucket.id
   eventbridge = true
 }
 
@@ -42,8 +42,8 @@ resource "aws_dynamodb_table" "special_message_alarm_dynamodb_table" {
   name           = "special-message-alarm-audio-state"
   read_capacity  = 1
   write_capacity = 1
-  billing_mode = "PROVISIONED"
-  hash_key = "user_id"
+  billing_mode   = "PROVISIONED"
+  hash_key       = "user_id"
 
   attribute {
     name = "user_id"

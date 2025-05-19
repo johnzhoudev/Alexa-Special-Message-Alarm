@@ -26,8 +26,8 @@ data "aws_iam_policy_document" "special_message_alarm_lambda_execution_policy" {
 }
 
 resource "aws_iam_role_policy" "special_message_alarm_lambda_role_policy" {
-  name = "special_message_alarm_lambda_role_policy"
-  role = aws_iam_role.special_message_alarm_lambda_execution_role.id
+  name   = "special_message_alarm_lambda_role_policy"
+  role   = aws_iam_role.special_message_alarm_lambda_execution_role.id
   policy = data.aws_iam_policy_document.special_message_alarm_lambda_execution_policy.json
 }
 

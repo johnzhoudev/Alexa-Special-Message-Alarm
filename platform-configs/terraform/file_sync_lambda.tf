@@ -45,8 +45,8 @@ data "aws_iam_policy_document" "file_sync_lambda_execution_policy" {
 }
 
 resource "aws_iam_role_policy" "file_sync_lambda_role_policy" {
-  name = "file_sync_lambda_role_policy"
-  role = aws_iam_role.file_sync_lambda_execution_role.id
+  name   = "file_sync_lambda_role_policy"
+  role   = aws_iam_role.file_sync_lambda_execution_role.id
   policy = data.aws_iam_policy_document.file_sync_lambda_execution_policy.json
 }
 
@@ -69,24 +69,24 @@ resource "aws_iam_role" "file_sync_lambda_execution_role" {
 
 # https://stackoverflow.com/questions/56916719/is-there-a-way-to-define-multiple-source-file-for-terraform-archive-provider
 locals {
-  source_files = ["./lambdas/file_sync.py", "./lambdas/shared_utils.py"]
+  source_files                 = ["./lambdas/file_sync.py", "./lambdas/shared_utils.py"]
   file_sync_lambda_output_path = "./lambdas/temp/file_sync_archive.zip"
 }
 
 data "template_file" "t_file" {
-  count = "${length(local.source_files)}"
-  template = "${file(element(local.source_files, count.index))}"
+  count    = length(local.source_files)
+  template = file(element(local.source_files, count.index))
 }
 
 resource "local_file" "to_temp_dir" {
-  count = "${length(local.source_files)}"
+  count    = length(local.source_files)
   filename = "./lambdas/temp/${basename(element(local.source_files, count.index))}"
-  content = "${element(data.template_file.t_file.*.rendered, count.index)}"
+  content  = element(data.template_file.t_file.*.rendered, count.index)
 }
 
 data "archive_file" "file_sync_lambda" {
-  type = "zip"
-  source_dir = "./lambdas/temp"
+  type        = "zip"
+  source_dir  = "./lambdas/temp"
   output_path = local.file_sync_lambda_output_path
 
   depends_on = [
@@ -95,10 +95,10 @@ data "archive_file" "file_sync_lambda" {
 }
 
 resource "aws_lambda_function" "file_sync_lambda" {
-  filename = local.file_sync_lambda_output_path
+  filename      = local.file_sync_lambda_output_path
   function_name = "special-message-alarm-file-sync-lambda"
-  role = aws_iam_role.file_sync_lambda_execution_role.arn
-  handler = "file_sync.lambda_handler"
+  role          = aws_iam_role.file_sync_lambda_execution_role.arn
+  handler       = "file_sync.lambda_handler"
 
   source_code_hash = data.archive_file.file_sync_lambda.output_base64sha256
 
@@ -108,17 +108,17 @@ resource "aws_lambda_function" "file_sync_lambda" {
   environment {
     variables = {
       SPECIAL_MESSAGE_ALARM_TABLE_NAME = aws_dynamodb_table.special_message_alarm_dynamodb_table.id,
-      AWS_REGION_NAME = local.region,
-      MAX_PLAYS_METADATA_KEY = "max-plays",
-      PLAY_IMMEDIATELY_METADATA_KEY = "play-immediately",
-      AWS_S3_BUCKET_NAME = aws_s3_bucket.special_message_alarm_s3_bucket.id
+      AWS_REGION_NAME                  = local.region,
+      MAX_PLAYS_METADATA_KEY           = "max-plays",
+      PLAY_IMMEDIATELY_METADATA_KEY    = "play-immediately",
+      AWS_S3_BUCKET_NAME               = aws_s3_bucket.special_message_alarm_s3_bucket.id
     }
   }
 }
 
 // Cron Job Sync Rule
 resource "aws_cloudwatch_event_rule" "sync_audio_files" {
-  name = "special_message_alarm_sync_audio_files_event_rule"
+  name        = "special_message_alarm_sync_audio_files_event_rule"
   description = "Syncs audio files in S3 bucket with Dynamo"
 
   schedule_expression = "cron(0 8 ? * MON *)"
@@ -126,14 +126,14 @@ resource "aws_cloudwatch_event_rule" "sync_audio_files" {
 
 resource "aws_cloudwatch_event_target" "send_to_sync_audio_files_lambda" {
   target_id = "file_sync_lambda"
-  rule = aws_cloudwatch_event_rule.sync_audio_files.name
-  arn = aws_lambda_function.file_sync_lambda.arn
+  rule      = aws_cloudwatch_event_rule.sync_audio_files.name
+  arn       = aws_lambda_function.file_sync_lambda.arn
 }
 
 resource "aws_lambda_permission" "allow_cloudwatch" {
-  statement_id = "AllowExecutionFromCloudWatch"
-  action = "lambda:InvokeFunction"
+  statement_id  = "AllowExecutionFromCloudWatch"
+  action        = "lambda:InvokeFunction"
   function_name = aws_lambda_function.file_sync_lambda.function_name
-  principal = "events.amazonaws.com"
-  source_arn = aws_cloudwatch_event_rule.sync_audio_files.arn
+  principal     = "events.amazonaws.com"
+  source_arn    = aws_cloudwatch_event_rule.sync_audio_files.arn
 }
